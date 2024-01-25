@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Order Page</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.14.2/matter.min.js"></script>
+    <script>
+
+        const socket = io();
+        document.addEventListener('DOMContentLoaded', function () {
+
+
+            document.getElementById('submit').addEventListener('click', function () {
+                const name = document.getElementById('name').value;
+                const quantity = document.getElementById('quantity').value;
+                const location = document.getElementById('location').value;
+                const email = document.getElementById('email').value;
+                const maxDiscount = document.getElementById('emailInfo').textContent.split(':')[2].split('%')[0].trim(); // Extract discount from the email info
+                const confirmed = confirm(`Confirm Order:\nName: ${name}\nQuantity: ${quantity}\nLocation: ${location}\nDiscount: ${maxDiscount}%`);
+                if (confirmed) {
+                    socket.emit('newOrder', { name, quantity, location, email });
+                    confirm("Order received. Thank you for your order.");
+                }
+            });
+
+            document.getElementById('validateEmail').addEventListener('click', function () {
+                const email = document.getElementById('email').value;
+                const id = document.getElementById('idInput').value;
+                socket.emit('validateEmail', email, id);
+                console.log(email, id);
+            });
+
+            socket.on('emailValidated', function (data) {
+                const emailInfo = document.getElementById('emailInfo');
+                if (data.valid) {
+                    emailInfo.innerHTML = `Attempts Left: ${data.remainingAttempts}<br>Highest Discount : ${data.maxDiscount}%`;
+                } else {
+                    emailInfo.textContent = 'Email or ID incorrect';
+                }
+            });
+
+            document.getElementById('spawnBall').addEventListener('click', function () {
+                const email = document.getElementById('email').value;
+                if (email) {
+                    socket.emit('spawnMarble', email);
+                }
+            });
+
+            socket.on('updateAttempts', function (data) {
+                const emailInfo = document.getElementById('emailInfo');
+                // Update the emailInfo element with the new number of attempts
+                emailInfo.innerHTML = `Attempts Left: ${data.remainingAttempts}<br>Highest Discount : ${data.maxDiscount}%`;
+            });
+
+            socket.on('idValidated', function (data) {
+                const emailInfo = document.getElementById('emailInfo');
+                if (data.valid) {
+                    emailInfo.innerHTML = `Attempts Left: ${data.remainingAttempts}<br>Highest Discount : ${data.maxDiscount}%`;
+                } else {
+                    emailInfo.textContent = '';
+                }
+            });
+
+            socket.on('idconfirmEmail', function (data) {
+                alert(`Your ID has been sent to ${data.email}`);
+            });
+        });
+        function notifyBallSpawned() {
+            const email = document.getElementById('email').value;
+            if (email) {
+                socket.emit('notifyBallSpawned', email);
+                console.log("emit email");
+            }
+        }
+        function notifyBallHit(percentage) {
+            const email = document.getElementById('email').value;
+
+            if (email) {
+                socket.emit('notifyBallHit', email, percentage);
+                console.log("emit persentage");
+            }
+        }
+    </script>
+    <script src="/codes/physics.js"></script>
+</head>
+
+<body>
+    <h1>Pa Pa Pan - Ticket Preorder</h1>
+    <img id="titleimage" src="/image/papapan.png">
+    <h3>Each box, containing a selection of pancakes, is priced at just <strong>100NT</strong> and includes a complimentary drink.</h3>
+    <p class="CusText">Reserve Your Ticket Here for a Chance to Win Amazing Discounts <br> Up to 100% Off!</p>
+    <br><br>
+    <p class="CusText">🌟 Exclusive Offer: A Chance to Win a FREE Prize! 🌟</p>
+    <h2>Along with your purchase, you will receive a ticket for our <b>lucky draw</b> The draw boasts impressive prizes like a hotel stay, exclusive beverages, vouchers, and much more.</h2>
+    <h4>That means there will be two lucky draws, one for the discount for the tickets right on this website, and another one for those who perchaced the ticket to win the final price.</h4>
+    <br><br>
+    <h2>Enter Your Email to Play</h2>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="text" id="idInput" placeholder="Enter your email ID" required>
+    <button id="validateEmail">Validate Email</button>
+    <p>If you are new here, you don't need to enter your email ID.<br>The email ID will be sent to you when you clicked VALIDATE EMAIL</p>
+    <div id="emailInfo"></div>
+    <br><br>
+    <h2>Try out your luck and win up to 100% OFF!</h2>
+    <div id="world"></div>
+    <button id="spawnBall">Spawn Marble</button>
+    <p>If the marble gets stuck, try charging your device. It will do the trick.</p>
+    <br><br>
+    <h2>Place Your Order</h2>
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="number" id="quantity" placeholder="Quantity" min="1" required>
+    <input type="text" id="location" placeholder="Location (e.g. 11-1 or Teacher's Office)" required>
+    <button id="submit">Submit</button>
+
+    <h4>Your order will be conveniently delivered to you on March 25, 2024.</h4>
+    <h3>February 26, 2024 will be the day we will distribute the lucky draw tickets and collect payments for your pre-orders for students.</h3>
+    <p>For teachers, distribute and collection date has been provided to you via email.</p>
+
+    <div id="winPopup">
+        <div id="winMessage">You won!</div>
+        <img id="closePopup" src="/image/exit.png" />
+    </div>
+
+</body>
+<link rel="stylesheet" href="/codes/style.css">
+
+</html>

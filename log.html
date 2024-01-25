@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Log Viewer</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io();
+            const logContainer = document.getElementById('log');
+
+            socket.on('fileData', function(data) {
+                logContainer.innerHTML = '';
+                data.split('\n').forEach((line, index) => {
+                    if (line) {
+                        const lineElement = document.createElement('div');
+                        lineElement.innerHTML = line; // Use innerHTML to render HTML tags
+                        const tabSpace = document.createTextNode('\u00A0\u00A0\u00A0\u00A0'); // Four non-breaking spaces
+                        lineElement.appendChild(tabSpace);
+
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove';
+                        removeButton.onclick = function() {
+                            socket.emit('removeLine', index);
+                        };
+                        lineElement.appendChild(removeButton);
+                        logContainer.appendChild(lineElement);
+                    }
+                });
+            });
+
+            document.getElementById('clearLog').addEventListener('click', function() {
+                socket.emit('clearLog');
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Order Log</h1>
+    <button id="clearLog">Clear Log</button>
+    <div id="log"></div>
+</body>
+</html>
